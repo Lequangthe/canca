@@ -1,0 +1,28 @@
+package com.quangthe.canca.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+val PrimaryGreen = Color(0xFF2B6E2B)
+val HeaderGreen = Color(0xFF7EB41F)
+val TicketGreen = Color(0xFF2F7D32)
+val DetailPrimaryGreen = Color(0xFF0D4715)
+val DetailDarkGreen = Color(0xFF1B5E20)
+val SettingsPrimaryGreen = Color(0xFF1B5E20)
+val AmountOrange = Color(0xFFF89F60)
+val CreateButtonOrange = Color(0xFFFF9800)
+val SettingsBlue = Color(0xFF3574F0)
+val TrashBlue = Color(0xFF3390EC)
+val AppBackground = Color(0xFFEDEFF1)
+val DetailAppBackground = Color(0xFFF9FBF7)
+val SettingsAppBackground = Color(0xFFF5F7F5)
+val DetailLightGreen = Color(0xFFE8F3E1)
+val DetailBorderColor = Color(0xFFC8E0B5)
+val DetailTableBorder = Color(0xFFE2E8E0)
+val DetailTextColor = Color(0xFF1A2E1A)
+val SettingsLightGreen = Color(0xFFE8F5E9)
+val BackgroundGreen = Color(0xFFE9F0E6)
+val SurfaceGreen = Color(0xFFF1F8F1)
+val SummaryGold = Color(0xFFFFC107)
+val SummaryGoldLight = Color(0xFFFFF8E1)
+val BalanceRed = Color(0xFFD32F2F)
+val DashboardBlue = Color(0xFFE4F2FD)
