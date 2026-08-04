@@ -12,7 +12,7 @@ import androidx.room.RoomDatabase
         FishCell::class,
         AppSettings::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = false
 )
 abstract class FishDatabase : RoomDatabase() {

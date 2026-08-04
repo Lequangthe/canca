@@ -32,7 +32,16 @@ fun LongTicketShareView(
 
     val numBags = allCells.count { it.value > 0 }
     val totalTare = numBags * ticket.tarePerBag
-    val remainingWeight = totalWeight - totalTare
+    val totalImpurity = (totalWeight / 1000.0) * ticket.impurityPerTon
+    val weightAfterTare = totalWeight - totalTare - totalImpurity
+    
+    val deductionAmount = if (ticket.deductionType == 0) {
+        weightAfterTare * (ticket.deductionValue / 100.0)
+    } else {
+        ticket.deductionValue
+    }
+    
+    val remainingWeight = weightAfterTare - deductionAmount
     val balance = totalPrice - ticket.deposit
 
     Column(
@@ -82,6 +91,9 @@ fun LongTicketShareView(
             SummaryRow("Tổng khối lượng (Gross)", "${df.format(totalWeight)} kg", isBold = true)
             SummaryRow("Tổng số mã", "$numBags mã")
             SummaryRow("Trừ bì (${ticket.tarePerBag} kg/mã)", "${df.format(totalTare)} kg")
+            
+            val deductionLabel = if (ticket.deductionType == 0) "${ticket.deductionValue}%" else "${ticket.deductionValue} kg"
+            SummaryRow("Khấu trừ phao/nước ($deductionLabel)", "${df.format(deductionAmount)} kg")
             
             Divider(color = DetailBorderColor)
             

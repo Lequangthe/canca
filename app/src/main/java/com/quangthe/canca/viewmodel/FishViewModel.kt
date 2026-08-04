@@ -417,7 +417,9 @@ class FishViewModel(application: Application) : AndroidViewModel(application), T
                                         unitPrice = parts[4].toInt(),
                                         deposit = parts[5].toLong(),
                                         isDeleted = parts[6].toBoolean(),
-                                        createdAt = parts[7].toLong()
+                                        deductionType = parts[7].toInt(),
+                                        deductionValue = parts[8].toDouble(),
+                                        createdAt = parts[9].toLong()
                                     ))
                                 }
                             }
@@ -470,9 +472,17 @@ class FishViewModel(application: Application) : AndroidViewModel(application), T
                 
                 val totalWeight = allCells.sumOf { it.value }
                 val totalBags = allCells.count { it.value > 0 }
-                val totalTare = if (ticket.tarePerBag > 0) totalBags.toDouble() / ticket.tarePerBag else 0.0
+                val totalTare = totalBags * ticket.tarePerBag
                 val totalImpurity = (totalWeight / 1000.0) * ticket.impurityPerTon
-                val netWeight = totalWeight - totalTare - totalImpurity
+                
+                val weightAfterTare = totalWeight - totalTare - totalImpurity
+                val deductionAmount = if (ticket.deductionType == 0) {
+                    weightAfterTare * (ticket.deductionValue / 100.0)
+                } else {
+                    ticket.deductionValue
+                }
+                
+                val netWeight = weightAfterTare - deductionAmount
                 val totalPrice = netWeight * ticket.unitPrice
 
                 com.quangthe.canca.utils.ExportUtils.exportToExcel(
@@ -556,7 +566,16 @@ class FishViewModel(application: Application) : AndroidViewModel(application), T
                         val totalWeight = cells.sumOf { it.value }
                         val totalBags = cells.count { it.value > 0 }
                         val totalTare = totalBags * ticket.tarePerBag
-                        val remainingWeight = totalWeight - totalTare
+                        val totalImpurity = (totalWeight / 1000.0) * ticket.impurityPerTon
+                        
+                        val weightAfterTare = totalWeight - totalTare - totalImpurity
+                        val deductionAmount = if (ticket.deductionType == 0) {
+                            weightAfterTare * (ticket.deductionValue / 100.0)
+                        } else {
+                            ticket.deductionValue
+                        }
+                        
+                        val remainingWeight = weightAfterTare - deductionAmount
                         val fishValue = (remainingWeight * ticket.unitPrice).toLong()
                         val balance = fishValue - ticket.deposit
                         

@@ -14,6 +14,8 @@ data class FishTicket(
     val unitPrice: Int = 0,
     val deposit: Long = 0,      // Tiền cọc, ứng (kết hợp)
     val isDeleted: Boolean = false,
+    val deductionType: Int = 0,   // 0: Phần trăm (%), 1: Số kg
+    val deductionValue: Double = 0.0,
     val createdAt: Long = System.currentTimeMillis()
 )
 

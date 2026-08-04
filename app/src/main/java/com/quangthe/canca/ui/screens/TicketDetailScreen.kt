@@ -103,7 +103,15 @@ fun TicketDetailScreen(
     val numBags = allCells.count { it.value > 0 }
     val totalTare = numBags * (ticket?.tarePerBag ?: 0.0)
     val totalImpurity = (totalWeight / 1000.0) * (ticket?.impurityPerTon ?: 0)
-    val remainingWeight = totalWeight - totalTare - totalImpurity
+    
+    val weightAfterTare = totalWeight - totalTare - totalImpurity
+    val deductionAmount = if (ticket?.deductionType == 0) {
+        weightAfterTare * ((ticket?.deductionValue ?: 0.0) / 100.0)
+    } else {
+        ticket?.deductionValue ?: 0.0
+    }
+    
+    val remainingWeight = weightAfterTare - deductionAmount
     val totalPrice = remainingWeight * (ticket?.unitPrice ?: 0)
 
     Scaffold(
@@ -213,6 +221,8 @@ fun TicketDetailScreen(
                 totalWeight = totalWeight,
                 numBags = numBags,
                 totalTare = totalTare,
+                weightAfterTare = weightAfterTare,
+                deductionAmount = deductionAmount,
                 remainingWeight = remainingWeight,
                 totalPrice = totalPrice,
                 ticket = ticket!!,
@@ -362,6 +372,8 @@ fun DashboardContent(
     totalWeight: Double,
     numBags: Int,
     totalTare: Double,
+    weightAfterTare: Double,
+    deductionAmount: Double,
     remainingWeight: Double,
     totalPrice: Double,
     ticket: FishTicket,
@@ -372,6 +384,7 @@ fun DashboardContent(
     isEditMode: Boolean
 ) {
     var showTareDialog by remember { mutableStateOf(false) }
+    var showDeductionDialog by remember { mutableStateOf(false) }
     var showPriceDialog by remember { mutableStateOf(false) }
 
     val depositAndAdvance = ticket.deposit
@@ -432,6 +445,33 @@ fun DashboardContent(
                         DashboardItemRow("Trừ tạp chất (${ticket.impurityPerTon} kg/tấn)", String.format(Locale.US, "%.1f", imp) + " kg")
                     }
 
+                    DashboardItemRow("Khối lượng sau khi trừ bì", String.format(Locale.US, "%.1f", weightAfterTare) + " kg")
+
+                    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+                        Text("Khấu trừ phao/nước", style = MaterialTheme.typography.bodyMedium, color = Color.Black, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp)
+                                .background(DetailPrimaryGreen, RoundedCornerShape(8.dp))
+                                .border(1.dp, DetailPrimaryGreen.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                                .padding(horizontal = 8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(String.format(Locale.US, "%.1f", deductionAmount) + " Kg", fontWeight = FontWeight.Bold, color = Color.White, modifier = Modifier.weight(1f))
+                                val deductionLabel = if (ticket.deductionType == 0) "${ticket.deductionValue}%" else "${ticket.deductionValue} kg"
+                                Text("Khấu trừ $deductionLabel", color = Color.White, fontWeight = FontWeight.Bold)
+                                IconButton(onClick = { showDeductionDialog = true }, modifier = Modifier.size(32.dp).padding(start = 4.dp)) {
+                                    Icon(Icons.Default.Settings, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                                }
+                            }
+                        }
+                    }
+
                     DashboardItemRow("Khối lượng còn lại (Net)", String.format(Locale.US, "%.1f", remainingWeight) + " kg", isBold = true)
 
                     HorizontalDivider(modifier = Modifier.padding(vertical = 2.dp), color = Color.White.copy(alpha = 0.5f))
@@ -477,6 +517,56 @@ fun DashboardContent(
                 }
             }
         }
+    }
+
+    if (showDeductionDialog && ticket != null) {
+        var tempType by remember { mutableStateOf(ticket.deductionType) }
+        var tempValue by remember { mutableStateOf(ticket.deductionValue.toString()) }
+        
+        AlertDialog(
+            onDismissRequest = { showDeductionDialog = false },
+            title = { Text("Cài đặt khấu trừ phao/nước") },
+            text = {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = tempType == 0, onClick = { tempType = 0 })
+                        Text("Trừ theo %", modifier = Modifier.clickable { tempType = 0 })
+                        Spacer(Modifier.width(16.dp))
+                        RadioButton(selected = tempType == 1, onClick = { tempType = 1 })
+                        Text("Trừ theo kg", modifier = Modifier.clickable { tempType = 1 })
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    Text(if (tempType == 0) "Nhập tỷ lệ %:" else "Nhập số kg trừ cố định:")
+                    OutlinedTextField(
+                        value = tempValue,
+                        onValueChange = { tempValue = it },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        modifier = Modifier.fillMaxWidth(),
+                        suffix = { Text(if (tempType == 0) "%" else "kg") }
+                    )
+                    if (tempType == 0) {
+                        Text(
+                            text = "Khấu trừ = (Tổng - Bì) x $tempValue%",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onTicketUpdate(ticket.copy(
+                        deductionType = tempType,
+                        deductionValue = tempValue.toDoubleOrNull() ?: 0.0
+                    ))
+                    showDeductionDialog = false
+                }) { Text("Lưu") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeductionDialog = false }) { Text("Hủy") }
+            }
+        )
     }
 
     if (showTareDialog && ticket != null) {

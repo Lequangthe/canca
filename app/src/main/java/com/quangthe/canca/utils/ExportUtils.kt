@@ -84,6 +84,23 @@ object ExportUtils {
             createCell(1).setCellValue("${ticket.tarePerBag} kg / mã (Tổng: ${numBags * ticket.tarePerBag} kg)")
         }
         summarySheet.createRow(rowIdx++).apply {
+            createCell(0).setCellValue("Khối lượng sau khi trừ bì & tạp chất:")
+            val numBags = allCells.count { it.value > 0 }
+            val totalTare = numBags * ticket.tarePerBag
+            val totalImpurity = (totalWeight / 1000.0) * ticket.impurityPerTon
+            createCell(1).setCellValue(totalWeight - totalTare - totalImpurity)
+        }
+        summarySheet.createRow(rowIdx++).apply {
+            createCell(0).setCellValue("Khấu trừ phao/nước:")
+            val weightAfterTare = totalWeight - (allCells.count { it.value > 0 } * ticket.tarePerBag) - ((totalWeight / 1000.0) * ticket.impurityPerTon)
+            val deduction = if (ticket.deductionType == 0) {
+                "${ticket.deductionValue}% (Tổng: ${weightAfterTare * (ticket.deductionValue / 100.0)} kg)"
+            } else {
+                "${ticket.deductionValue} kg"
+            }
+            createCell(1).setCellValue(deduction)
+        }
+        summarySheet.createRow(rowIdx++).apply {
             createCell(0).setCellValue("Đơn giá:")
             createCell(1).setCellValue(ticket.unitPrice.toDouble())
         }
@@ -123,9 +140,9 @@ object ExportUtils {
         
         // Export Tickets
         sb.append("--- TICKETS ---\n")
-        sb.append("id,ticketName,tarePerBag,impurityPerTon,unitPrice,deposit,isDeleted,createdAt\n")
+        sb.append("id,ticketName,tarePerBag,impurityPerTon,unitPrice,deposit,isDeleted,deductionType,deductionValue,createdAt\n")
         tickets.forEach { t ->
-            sb.append("${t.id},\"${t.ticketName}\",${t.tarePerBag},${t.impurityPerTon},${t.unitPrice},${t.deposit},${t.isDeleted},${t.createdAt}\n")
+            sb.append("${t.id},\"${t.ticketName}\",${t.tarePerBag},${t.impurityPerTon},${t.unitPrice},${t.deposit},${t.isDeleted},${t.deductionType},${t.deductionValue},${t.createdAt}\n")
         }
 
         // Export Sheets
@@ -212,7 +229,17 @@ object ExportUtils {
             val totalWeight = allCells.sumOf { it.value }
             val totalBags = allCells.count { it.value > 0 }
             val totalTare = totalBags * ticket.tarePerBag
-            val remainingWeight = totalWeight - totalTare
+            val totalImpurity = (totalWeight / 1000.0) * ticket.impurityPerTon
+            
+            val weightAfterTare = totalWeight - totalTare - totalImpurity
+            
+            val deductionAmount = if (ticket.deductionType == 0) {
+                weightAfterTare * (ticket.deductionValue / 100.0)
+            } else {
+                ticket.deductionValue
+            }
+            
+            val remainingWeight = weightAfterTare - deductionAmount
             val totalPrice = (remainingWeight * ticket.unitPrice)
             val balance = totalPrice - ticket.deposit
 
