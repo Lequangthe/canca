@@ -482,8 +482,12 @@ class FishViewModel(application: Application) : AndroidViewModel(application), T
                     ticket.deductionValue
                 }
                 
-                val netWeight = weightAfterTare - deductionAmount
-                val totalPrice = netWeight * ticket.unitPrice
+                val rawRemainingWeight = weightAfterTare - deductionAmount
+                
+                val decimalPlaces = appSettings.value.decimalPlaces
+                val factor = Math.pow(10.0, decimalPlaces.toDouble())
+                val netWeight = Math.round(rawRemainingWeight * factor) / factor
+                val totalPrice = Math.round(netWeight * ticket.unitPrice)
 
                 com.quangthe.canca.utils.ExportUtils.exportToExcel(
                     context, ticket, sheets, allCells, totalWeight, totalPrice
@@ -500,7 +504,7 @@ class FishViewModel(application: Application) : AndroidViewModel(application), T
         sheets: List<FishSheet>,
         allCells: List<FishCell>,
         totalWeight: Double,
-        totalPrice: Double
+        totalPrice: Long
     ) {
         com.quangthe.canca.utils.ExportUtils.exportToExcel(
             context, ticket, sheets, allCells, totalWeight, totalPrice
@@ -575,8 +579,12 @@ class FishViewModel(application: Application) : AndroidViewModel(application), T
                             ticket.deductionValue
                         }
                         
-                        val remainingWeight = weightAfterTare - deductionAmount
-                        val fishValue = (remainingWeight * ticket.unitPrice).toLong()
+                        val rawRemainingWeight = weightAfterTare - deductionAmount
+                        
+                        val decimalPlaces = appSettings.value.decimalPlaces
+                        val factor = Math.pow(10.0, decimalPlaces.toDouble())
+                        val remainingWeight = Math.round(rawRemainingWeight * factor) / factor
+                        val fishValue = Math.round(remainingWeight * ticket.unitPrice)
                         val balance = fishValue - ticket.deposit
                         
                         FishMultiTicketTotals(

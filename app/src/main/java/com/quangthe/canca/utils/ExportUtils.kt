@@ -22,7 +22,7 @@ object ExportUtils {
         sheets: List<FishSheet>,
         allCells: List<FishCell>,
         totalWeight: Double,
-        totalPrice: Double
+        totalPrice: Long
     ) {
         val workbook = XSSFWorkbook()
         val gson = Gson()
@@ -106,7 +106,7 @@ object ExportUtils {
         }
         summarySheet.createRow(rowIdx++).apply {
             createCell(0).setCellValue("Thành tiền:")
-            createCell(1).setCellValue(totalPrice)
+            createCell(1).setCellValue(totalPrice.toDouble())
         }
         summarySheet.createRow(rowIdx++).apply {
             createCell(0).setCellValue("Tiền cọc/ứng:")
@@ -114,7 +114,7 @@ object ExportUtils {
         }
         summarySheet.createRow(rowIdx++).apply {
             createCell(0).setCellValue("Còn lại:")
-            createCell(1).setCellValue(totalPrice - ticket.deposit)
+            createCell(1).setCellValue((totalPrice - ticket.deposit).toDouble())
         }
 
         val exportDir = File(context.cacheDir, "exports").also { it.mkdirs() }
@@ -239,8 +239,10 @@ object ExportUtils {
                 ticket.deductionValue
             }
             
-            val remainingWeight = weightAfterTare - deductionAmount
-            val totalPrice = (remainingWeight * ticket.unitPrice)
+            val rawRemainingWeight = weightAfterTare - deductionAmount
+            // Rounding to 1 decimal place as a standard for summary if not specified
+            val remainingWeight = Math.round(rawRemainingWeight * 10.0) / 10.0
+            val totalPrice = Math.round(remainingWeight * ticket.unitPrice)
             val balance = totalPrice - ticket.deposit
 
             val row = summarySheet.createRow(rowIdx++)

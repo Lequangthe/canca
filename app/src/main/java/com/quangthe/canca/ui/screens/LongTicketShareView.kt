@@ -24,7 +24,8 @@ fun LongTicketShareView(
     ticket: FishTicket,
     allCells: List<FishCell>,
     totalWeight: Double,
-    totalPrice: Double
+    remainingWeight: Double,
+    totalPrice: Long
 ) {
     val df = DecimalFormat("#,###.#")
     val currencyFmt = DecimalFormat("#,###")
@@ -33,16 +34,14 @@ fun LongTicketShareView(
     val numBags = allCells.count { it.value > 0 }
     val totalTare = numBags * ticket.tarePerBag
     val totalImpurity = (totalWeight / 1000.0) * ticket.impurityPerTon
-    val weightAfterTare = totalWeight - totalTare - totalImpurity
-    
+    val balance = totalPrice - ticket.deposit
+
+    val rawWeightAfterTare = totalWeight - totalTare - totalImpurity
     val deductionAmount = if (ticket.deductionType == 0) {
-        weightAfterTare * (ticket.deductionValue / 100.0)
+        rawWeightAfterTare * (ticket.deductionValue / 100.0)
     } else {
         ticket.deductionValue
     }
-    
-    val remainingWeight = weightAfterTare - deductionAmount
-    val balance = totalPrice - ticket.deposit
 
     Column(
         modifier = Modifier
@@ -174,19 +173,22 @@ fun SummaryRow(
             .fillMaxWidth()
             .background(backgroundColor)
             .padding(horizontal = 12.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (isBold) FontWeight.Bold else FontWeight.Normal,
-            color = Color.DarkGray
+            color = Color.DarkGray,
+            modifier = Modifier.weight(1.2f)
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyLarge,
+            style = if (isBold) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyLarge,
             fontWeight = if (isBold) FontWeight.ExtraBold else FontWeight.Bold,
-            color = textColor
+            color = textColor,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1f)
         )
     }
 }

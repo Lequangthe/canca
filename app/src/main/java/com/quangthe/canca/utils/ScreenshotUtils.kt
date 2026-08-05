@@ -11,10 +11,13 @@ import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.compose.ui.platform.findViewTreeCompositionContext
+import androidx.compose.ui.unit.Density
 import androidx.core.content.FileProvider
 import androidx.lifecycle.findViewTreeLifecycleOwner
 import androidx.lifecycle.findViewTreeViewModelStoreOwner
@@ -52,7 +55,7 @@ object ScreenshotUtils {
     }
 
     /**
-     * Renders a Composable into a Bitmap by momentarily attaching it to the Activity's root view.
+     * Renders a Composable into a Bitmap with forced standard font scale.
      */
     fun generateBitmapFromComposable(
         context: Context,
@@ -64,13 +67,11 @@ object ScreenshotUtils {
         val composeView = ComposeView(context).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             
-            // Try to inherit the composition context from the existing UI
             val parentComposition = rootView.findViewTreeCompositionContext()
             if (parentComposition != null) {
                 setParentCompositionContext(parentComposition)
             }
             
-            // Also inherit owners
             val lifecycleOwner = rootView.findViewTreeLifecycleOwner() ?: activity
             val viewModelStoreOwner = rootView.findViewTreeViewModelStoreOwner() ?: activity
             val savedStateRegistryOwner = rootView.findViewTreeSavedStateRegistryOwner() ?: activity
@@ -80,9 +81,15 @@ object ScreenshotUtils {
             setViewTreeSavedStateRegistryOwner(savedStateRegistryOwner)
 
             setContent {
-                CANCATheme(dynamicColor = false) {
-                    Surface(color = Color.White) {
-                        content()
+                val currentDensity = LocalDensity.current
+                // Force fontScale to 1.0 to prevent layout breakage on devices with large font settings
+                CompositionLocalProvider(
+                    LocalDensity provides Density(density = currentDensity.density, fontScale = 1.0f)
+                ) {
+                    CANCATheme(dynamicColor = false) {
+                        Surface(color = Color.White) {
+                            content()
+                        }
                     }
                 }
             }
@@ -92,10 +99,10 @@ object ScreenshotUtils {
         rootView.addView(composeView, FrameLayout.LayoutParams(1080, ViewGroup.LayoutParams.WRAP_CONTENT))
 
         try {
-            val widthSpec = View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY)
+            val widthSpecFixed = View.MeasureSpec.makeMeasureSpec(1080, View.MeasureSpec.EXACTLY)
             val heightSpec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
             
-            composeView.measure(widthSpec, heightSpec)
+            composeView.measure(widthSpecFixed, heightSpec)
             
             val measuredWidth = composeView.measuredWidth
             val measuredHeight = composeView.measuredHeight

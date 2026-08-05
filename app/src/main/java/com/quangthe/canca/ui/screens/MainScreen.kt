@@ -130,6 +130,25 @@ fun MainScreen(
                     ),
                     singleLine = true
                 )
+                
+                // Nút Tính tổng các phiếu
+                Button(
+                    onClick = {
+                        selectedTicketIds.clear()
+                        selectedTicketIds.addAll(filteredTickets.map { it.id })
+                        showMultiSelectMode = true
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = TicketGreen),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(Icons.Default.Functions, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text("Tính tổng các phiếu", fontWeight = FontWeight.Bold)
+                }
+
                 Spacer(modifier = Modifier.height(8.dp))
             }
         },
@@ -186,19 +205,6 @@ fun MainScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Tổng hợp các phiếu đã chọn (Cố định phía trên, không cuộn)
-            if (showMultiSelectMode && selectedTicketIds.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                ) {
-                    MultiSelectSummaryCard(
-                        ticketIds = selectedTicketIds,
-                        viewModel = viewModel
-                    )
-                }
-            }
-
             Box(modifier = Modifier.weight(1f)) {
                 if (filteredTickets.isEmpty()) {
                     Box(
@@ -219,6 +225,21 @@ fun MainScreen(
                         .fillMaxSize()
                         .padding(horizontal = 16.dp)
                 ) {
+                    // Tổng hợp các phiếu đã chọn
+                    if (showMultiSelectMode && selectedTicketIds.isNotEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .padding(vertical = 12.dp)
+                            ) {
+                                MultiSelectSummaryCard(
+                                    ticketIds = selectedTicketIds,
+                                    viewModel = viewModel
+                                )
+                            }
+                        }
+                    }
+
                     if (showMultiSelectMode) {
                         item {
                             val allIds = filteredTickets.map { it.id }
@@ -356,8 +377,14 @@ fun TicketCard(
     
     val totalWeight = cells.sumOf { it.value }
     val totalBags = cells.count { it.value > 0 }
-    val remainingWeight = totalWeight - (totalBags * ticket.tarePerBag)
-    val finalAmount = (remainingWeight * ticket.unitPrice).toLong()
+    
+    val appSettings by viewModel.appSettings.collectAsState()
+    val decimalPlaces = appSettings.decimalPlaces
+    val factor = Math.pow(10.0, decimalPlaces.toDouble())
+    
+    val rawRemainingWeight = totalWeight - (totalBags * ticket.tarePerBag)
+    val remainingWeight = Math.round(rawRemainingWeight * factor) / factor
+    val finalAmount = Math.round(remainingWeight * ticket.unitPrice)
 
     Card(
         modifier = Modifier
@@ -543,31 +570,35 @@ fun MultiSelectSummaryCard(
                     .background(SummaryGold)
                     .padding(16.dp)
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Summarize,
-                        contentDescription = null,
-                        tint = Color.Black,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "TỔNG HỢP CÁC PHIẾU",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = Color.Black
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Summarize,
+                            contentDescription = null,
+                            tint = Color.Black,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "TỔNG HỢP CÁC PHIẾU",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.Black
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
                     Surface(
                         color = Color.Black,
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(16.dp)
                     ) {
                         Text(
-                            "${ticketIds.size} phiếu",
+                            "Đã chọn: ${ticketIds.size} phiếu",
                             color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 2.dp)
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp)
                         )
                     }
                 }
@@ -582,99 +613,92 @@ fun MultiSelectSummaryCard(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
                         text = "Tổng khối lượng:",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         color = Color.DarkGray
                     )
                     Text(
                         text = "${"%.1f".format(Locale.US, totals.totalWeight)} kg",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
                         color = Color.Black
                     )
                 }
                 
+                Spacer(modifier = Modifier.height(8.dp))
+                
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(
                         text = "Tổng số mã:",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleMedium,
                         color = Color.DarkGray
                     )
                     Text(
                         text = "${totals.totalBags} mã",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Black,
                         color = Color.Black
                     )
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(color = Color.Black.copy(alpha = 0.1f))
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(color = Color.Black.copy(alpha = 0.1f), thickness = 1.dp)
+                Spacer(modifier = Modifier.height(16.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                // TỔNG TIỀN CÁ: Xuống dòng
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         text = "TỔNG TIỀN CÁ:",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = Color.DarkGray
                     )
                     Text(
                         text = "${DecimalFormat("#,###").format(totals.totalFishValue)} VNĐ",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Black,
                         color = Color.Black
                     )
                 }
 
                 if (totals.totalFishValue != totals.totalBalance) {
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // TỔNG CÒN LẠI: Xuống dòng
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "TỔNG CÒN LẠI:",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color.Black
+                            color = Color.DarkGray
                         )
                         Text(
                             text = "${DecimalFormat("#,###").format(totals.totalBalance)} VNĐ",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Black,
                             color = BalanceRed
                         )
                     }
                     Text(
                         text = "(Đã trừ cọc & ứng các phiếu)",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray,
-                        modifier = Modifier.align(Alignment.End)
+                        modifier = Modifier.align(Alignment.End).padding(top = 4.dp)
                     )
                 } else {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     HorizontalDivider(color = Color.Black.copy(alpha = 0.1f))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    // TỔNG THANH TOÁN: Xuống dòng
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "TỔNG THANH TOÁN:",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
-                            color = Color.Black
+                            color = Color.DarkGray
                         )
                         Text(
                             text = "${DecimalFormat("#,###").format(totals.totalBalance)} VNĐ",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.Black,
                             color = BalanceRed
                         )
                     }

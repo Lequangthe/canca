@@ -111,8 +111,13 @@ fun TicketDetailScreen(
         ticket?.deductionValue ?: 0.0
     }
     
-    val remainingWeight = weightAfterTare - deductionAmount
-    val totalPrice = remainingWeight * (ticket?.unitPrice ?: 0)
+    val rawRemainingWeight = weightAfterTare - deductionAmount
+    
+    // Làm tròn khối lượng còn lại theo cấu hình (ví dụ 1 chữ số thập phân) trước khi tính tiền
+    // để kết quả khớp với con số hiển thị trên màn hình và máy tính tay.
+    val factor = Math.pow(10.0, appSettings.decimalPlaces.toDouble())
+    val remainingWeight = Math.round(rawRemainingWeight * factor) / factor
+    val totalPrice = Math.round(remainingWeight * (ticket?.unitPrice ?: 0))
 
     Scaffold(
         containerColor = DetailAppBackground,
@@ -224,7 +229,7 @@ fun TicketDetailScreen(
                 weightAfterTare = weightAfterTare,
                 deductionAmount = deductionAmount,
                 remainingWeight = remainingWeight,
-                totalPrice = totalPrice,
+                totalPrice = totalPrice.toDouble(),
                 ticket = ticket!!,
                 isExpanded = isDashboardExpanded,
                 onToggleExpand = { isDashboardExpanded = !isDashboardExpanded },
@@ -322,6 +327,7 @@ fun TicketDetailScreen(
                                         ticket = ticketData,
                                         allCells = cells,
                                         totalWeight = weightData,
+                                        remainingWeight = remainingWeight,
                                         totalPrice = priceData
                                     )
                                 }
@@ -507,11 +513,13 @@ fun DashboardContent(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("CÒN PHẢI TRẢ", fontWeight = FontWeight.Black, color = Color.Black)
+                        Text("CÒN PHẢI TRẢ", fontWeight = FontWeight.Black, color = Color.Black, modifier = Modifier.weight(1f))
                         Text(
                             "${DecimalFormat("#,###").format(balance)} đ",
                             fontWeight = FontWeight.Black,
-                            color = BalanceRed
+                            color = BalanceRed,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.weight(1.5f)
                         )
                     }
                 }
@@ -720,10 +728,10 @@ fun DashboardItemRow(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(44.dp)
+                .heightIn(min = 44.dp)
                 .background(backgroundColor, RoundedCornerShape(8.dp))
                 .border(1.dp, backgroundColor.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-                .padding(horizontal = 8.dp)
+                .padding(horizontal = 8.dp, vertical = 8.dp)
         ) {
             Text(
                 value,
