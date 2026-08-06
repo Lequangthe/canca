@@ -23,9 +23,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            CANCATheme {
+            val viewModel: FishViewModel = viewModel()
+            val appSettings by viewModel.appSettings.collectAsState()
+
+            CANCATheme(fontScale = appSettings.globalFontScale) {
                 val navController = rememberNavController()
-                val viewModel: FishViewModel = viewModel()
 
                 NavHost(navController = navController, startDestination = "main") {
                     composable("main") {

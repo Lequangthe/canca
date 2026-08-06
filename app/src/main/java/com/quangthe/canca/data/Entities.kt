@@ -13,6 +13,7 @@ data class FishTicket(
     val impurityPerTon: Int = 0,   // Sẽ không dùng trong cân cá
     val unitPrice: Int = 0,
     val deposit: Long = 0,      // Tiền cọc, ứng (kết hợp)
+    val phoneNumber: String = "",
     val isDeleted: Boolean = false,
     val deductionType: Int = 0,   // 0: Phần trăm (%), 1: Số kg
     val deductionValue: Double = 0.0,
@@ -72,5 +73,7 @@ data class AppSettings(
     val vibrateOnColumnComplete: Boolean = true,
     val autoFocusNext: Boolean = true,
     val ttsSpeechRate: Float = 1.0f,
-    val ttsPitch: Float = 1.0f
+    val ttsPitch: Float = 1.0f,
+    val tableFontSize: Float = 16f,
+    val globalFontScale: Float = 1.0f
 )

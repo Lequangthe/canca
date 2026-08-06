@@ -25,7 +25,8 @@ fun LongTicketShareView(
     allCells: List<FishCell>,
     totalWeight: Double,
     remainingWeight: Double,
-    totalPrice: Long
+    totalPrice: Long,
+    fontSize: Float = 14f
 ) {
     val df = DecimalFormat("#,###.#")
     val currencyFmt = DecimalFormat("#,###")
@@ -69,6 +70,16 @@ fun LongTicketShareView(
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center
         )
+
+        if (ticket.phoneNumber.isNotEmpty()) {
+            Text(
+                text = "SĐT: ${ticket.phoneNumber}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Black,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
 
         Text(
             text = "Ngày tạo: ${sdf.format(Date(ticket.createdAt))}",
@@ -136,9 +147,11 @@ fun LongTicketShareView(
                     ) {
                         Text(
                             text = df.format(cell.value),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.Black
+                            fontSize = fontSize.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            maxLines = 1,
+                            softWrap = false
                         )
                     }
                 }

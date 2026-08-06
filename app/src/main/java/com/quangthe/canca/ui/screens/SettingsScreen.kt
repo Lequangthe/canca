@@ -3,6 +3,7 @@ package com.quangthe.canca.ui.screens
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.quangthe.canca.data.AppSettings
 import com.quangthe.canca.ui.theme.*
 import com.quangthe.canca.viewmodel.FishViewModel
@@ -219,6 +221,80 @@ fun OptionsTab(viewModel: FishViewModel, settings: AppSettings) {
                         valueRange = 0.5f..2.0f,
                         steps = 15,
                         colors = SliderDefaults.colors(thumbColor = SettingsPrimaryGreen, activeTrackColor = SettingsPrimaryGreen)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Cỡ chữ hiển thị trong bảng", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = SettingsPrimaryGreen)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text("Kích thước: ${settings.tableFontSize.toInt()} sp", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = settings.tableFontSize,
+                        onValueChange = { viewModel.updateAppSettings(settings.copy(tableFontSize = it)) },
+                        valueRange = 12f..24f,
+                        steps = 11,
+                        colors = SliderDefaults.colors(thumbColor = SettingsPrimaryGreen, activeTrackColor = SettingsPrimaryGreen)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("Xem trước (Preview):", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Preview Box
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .border(1.dp, Color.LightGray, RoundedCornerShape(8.dp))
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "125.5",
+                            fontSize = settings.tableFontSize.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Black,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Cỡ chữ toàn ứng dụng", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = SettingsPrimaryGreen)
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Text("Tỉ lệ: ${String.format("%.1f", settings.globalFontScale)}x", style = MaterialTheme.typography.bodyMedium)
+                    Slider(
+                        value = settings.globalFontScale,
+                        onValueChange = { viewModel.updateAppSettings(settings.copy(globalFontScale = it)) },
+                        valueRange = 0.8f..1.5f,
+                        steps = 6,
+                        colors = SliderDefaults.colors(thumbColor = SettingsPrimaryGreen, activeTrackColor = SettingsPrimaryGreen)
+                    )
+                    
+                    Text(
+                        "Lưu ý: Thay đổi này sẽ làm to/nhỏ tất cả các chữ trong ứng dụng.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
                     )
                 }
             }
