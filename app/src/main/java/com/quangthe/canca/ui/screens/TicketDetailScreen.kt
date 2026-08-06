@@ -382,6 +382,7 @@ fun DashboardContent(
     var showTareDialog by remember { mutableStateOf(false) }
     var showDeductionDialog by remember { mutableStateOf(false) }
     var showPriceDialog by remember { mutableStateOf(false) }
+    var showDepositDialog by remember { mutableStateOf(false) }
 
     val depositAndAdvance = ticket.deposit
     val balance = totalPrice - depositAndAdvance
@@ -583,7 +584,7 @@ fun DashboardContent(
                     icon = Icons.Default.AccountBalanceWallet,
                     iconColor = Color(0xFFFBC02D), // Gold
                     isEditMode = isEditMode,
-                    onClick = { /* show deposit dialog logic */ }
+                    onClick = { showDepositDialog = true }
                 )
 
                 Spacer(Modifier.height(8.dp))
@@ -717,6 +718,34 @@ fun DashboardContent(
             },
             dismissButton = {
                 TextButton(onClick = { showPriceDialog = false }) { Text("Hủy") }
+            }
+        )
+    }
+
+    if (showDepositDialog && ticket != null) {
+        var tempValue by remember { mutableStateOf(ticket.deposit.toString()) }
+        AlertDialog(
+            onDismissRequest = { showDepositDialog = false },
+            title = { Text("Cài đặt tiền cọc, ứng") },
+            text = {
+                Column {
+                    Text("Nhập số tiền cọc, ứng (đ):")
+                    OutlinedTextField(
+                        value = tempValue,
+                        onValueChange = { tempValue = it.filter { c -> c.isDigit() } },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    onTicketUpdate(ticket.copy(deposit = tempValue.toLongOrNull() ?: 0L))
+                    showDepositDialog = false
+                }) { Text("Lưu") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDepositDialog = false }) { Text("Hủy") }
             }
         )
     }
