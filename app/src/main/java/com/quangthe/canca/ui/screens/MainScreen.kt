@@ -1,5 +1,6 @@
 package com.quangthe.canca.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -51,6 +52,11 @@ fun MainScreen(
 
     val selectedTicketIds = remember { mutableStateListOf<Int>() }
     var showMultiSelectMode by remember { mutableStateOf(false) }
+
+    BackHandler(enabled = showMultiSelectMode) {
+        showMultiSelectMode = false
+        selectedTicketIds.clear()
+    }
 
     Scaffold(
         containerColor = AppBackground,
@@ -610,33 +616,30 @@ fun MultiSelectSummaryCard(
                     .background(SummaryGoldLight)
                     .padding(16.dp)
             ) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        text = "Tổng khối lượng:",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.DarkGray
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    StatSquare(
+                        label = "Tổng khối lượng",
+                        subLabel = "",
+                        value = "%.1f".format(Locale.US, totals.totalWeight),
+                        unit = "kg",
+                        icon = Icons.Default.Scale,
+                        iconColor = DetailPrimaryGreen,
+                        valueColor = DetailPrimaryGreen,
+                        modifier = Modifier.weight(1f)
                     )
-                    Text(
-                        text = "${"%.1f".format(Locale.US, totals.totalWeight)} kg",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Black,
-                        color = Color.Black
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(
-                        text = "Tổng số mã:",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.DarkGray
-                    )
-                    Text(
-                        text = "${totals.totalBags} mã",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Black,
-                        color = Color.Black
+                    StatSquare(
+                        label = "Tổng số mã",
+                        subLabel = "",
+                        value = "${totals.totalBags}",
+                        unit = "mã",
+                        icon = Icons.Default.Inventory2,
+                        iconColor = Color(0xFF8D6E63),
+                        valueColor = Color(0xFF8D6E63),
+                        modifier = Modifier.weight(1f)
                     )
                 }
 
